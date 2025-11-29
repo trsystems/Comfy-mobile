@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ComfyUI Studio V10</title>
+    <meta name="theme-color" content="#0a0a0a">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- SYSTEM LOGGING & ERROR HANDLING -->
+    <script>
+        window.onerror = function(msg, url, line, col, error) {
+            document.getElementById('loading-text').innerHTML = 
+                `<span style="color:#ef4444">ERRO FATAL:</span> <br/> ${msg} <br/> <small>${url}:${line}</small>`;
+            document.getElementById('loading-bar').style.backgroundColor = '#ef4444';
+            return false;
+        };
+    </script>
+    
+    <!-- React Dependencies -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide React Icons (UMD) - Tenta carregar globalmente -->
+    <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.min.js"></script>
+
+    <style>
+        body { background-color: #0a0a0a; color: #e5e5e5; -webkit-tap-highlight-color: transparent; user-select: none; margin: 0; font-family: sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        input[type="range"] { accent-color: #10b981; }
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Loading Screen Styles */
+        #root:empty {
+            display: flex;
+            height: 100vh;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #0a0a0a;
+        }
+        .loader { width: 200px; height: 4px; background: #333; border-radius: 4px; overflow: hidden; margin-top: 20px; }
+        .loader-bar { width: 50%; height: 100%; background: #10b981; animation: load 1s infinite ease-in-out alternate; }
+        @keyframes load { from { transform: translateX(-100%); } to { transform: translateX(200%); } }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <!-- Fallback content before React loads -->
+        <h2 style="color:white; font-weight:bold;">ComfyUI Studio</h2>
+        <p id="loading-text" style="color:#666; margin-top:10px; text-align:center; padding:20px;">
+            Carregando sistema...<br/>
+            <small>(Requer conexão com a internet na primeira vez)</small>
+        </p>
+        <div class="loader"><div id="loading-bar" class="loader-bar"></div></div>
+    </div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        
+        // --- SAFE ICON LOADER ---
+        // Tenta encontrar a biblioteca de ícones em várias variáveis globais possíveis
+        const LucideLib = window.lucideReact || window.LucideReact || window.lucide;
+        if (!LucideLib) {
+            throw new Error("Biblioteca de Ícones não carregou. Verifique sua internet.");
+        }
+        
+        const { 
+            Settings, Zap, Image: ImageIcon, History, Save, FolderOpen, 
+            FileJson, Trash2, CheckCircle, RefreshCw, X, Sliders, 
+            ChevronDown, ChevronUp, Lock, Clipboard, Download, Brain, Aperture,
+            AlertTriangle
+        } = LucideLib;
+
+        // --- CONSTANTES ---
+        const SAMPLERS = ["euler", "euler_ancestral", "heun", "dpm_2", "dpm_2_ancestral", "lms", "dpm_fast", "dpm_adaptive", "dpmpp_2s_ancestral", "dpmpp_2m", "dpmpp_2m_sde", "dpmpp_2m_sde_gpu", "ddim", "uni_pc", "lcm"];
+        const SCHEDULERS = ["normal", "karras", "exponential", "sgm_uniform", "simple", "ddim_uniform", "beta"];
+        const WORKFLOW_FALLBACK = {
+            "3": { "inputs": { "seed": 0, "steps": 20, "cfg": 8, "sampler_name": "euler", "scheduler": "normal", "denoise": 1, "model": ["4", 0], "positive": ["6", 0], "negative": ["7", 0], "latent_image": ["5", 0] }, "class_type": "KSampler" },
+            "4": { "inputs": { "ckpt_name": "v1-5-pruned-emaonly.ckpt" }, "class_type": "CheckpointLoaderSimple" },
+            "5": { "inputs": { "width": 512, "height": 512, "batch_size": 1 }, "class_type": "EmptyLatentImage" },
+            "6": { "inputs": { "text": "", "clip": ["4", 1] }, "class_type": "CLIPTextEncode" },
+            "7": { "inputs": { "text": "", "clip": ["4", 1] }, "class_type": "CLIPTextEncode" },
+            "8": { "inputs": { "samples": ["3", 0], "vae": ["4", 2] }, "class_type": "VAEDecode" },
+            "9": { "inputs": { "filename_prefix": "Mobile_Gen", "images": ["8", 0] }, "class_type": "SaveImage" }
+        };
+
+        function App() {
+            // --- ESTADOS ---
+            const [serverUrl, setServerUrl] = useState(() => localStorage.getItem('comfy_url') || '');
+            const [activeTab, setActiveTab] = useState('settings');
+            const [isConnected, setIsConnected] = useState(false);
+            const [connectionStatus, setConnectionStatus] = useState('idle');
+            
+            // Params
+            const [positivePrompt, setPositivePrompt] = useState('');
+            const [negativePrompt, setNegativePrompt] = useState('');
+            const [imageSize, setImageSize] = useState({ w: 512, h: 512 });
+            const [steps, setSteps] = useState(20);
+            const [cfg, setCfg] = useState(7.0);
+            const [sampler, setSampler] = useState('euler');
+            const [scheduler, setScheduler] = useState('normal');
+            
+            // Seeds
+            const [imageSeed, setImageSeed] = useState(-1);
+            const [llmSeed, setLlmSeed] = useState(-1);
+            
+            // UI
+            const [showAdvanced, setShowAdvanced] = useState(false);
+            const [isGenerating, setIsGenerating] = useState(false);
+            
+            // Data
+            const [models, setModels] = useState([]);
+            const [selectedModel, setSelectedModel] = useState('');
+            const [history, setHistory] = useState([]);
+            const [lastImage, setLastImage] = useState(null);
+            const [presets, setPresets] = useState([]);
+            
+            // Workflow
+            const [customWorkflow, setCustomWorkflow] = useState(null); 
+            const [customWorkflowName, setCustomWorkflowName] = useState('');
+            const [isModelLocked, setIsModelLocked] = useState(false);
+
+            // --- INICIALIZAÇÃO ---
+            useEffect(() => {
+                if (serverUrl) checkConnection(serverUrl, true);
+                try {
+                    const sp = localStorage.getItem('comfy_presets');
+                    if (sp) setPresets(JSON.parse(sp));
+                    const sh = localStorage.getItem('comfy_history');
+                    if (sh) setHistory(JSON.parse(sh));
+                } catch(e) {}
+            }, []);
+
+            // --- HANDLERS ---
+            const handleUrlChange = (e) => {
+                setServerUrl(e.target.value);
+                localStorage.setItem('comfy_url', e.target.value);
+            };
+
+            const handlePaste = async () => {
+                try {
+                    const text = await navigator.clipboard.readText();
+                    if (text) {
+                        setServerUrl(text);
+                        localStorage.setItem('comfy_url', text);
+                    }
+                } catch (err) { alert("Use o colar do teclado (Permissão negada)"); }
+            };
+
+            const downloadImage = async (url, name) => {
+                try {
+                    const res = await fetch(url);
+                    const blob = await res.blob();
+                    const bUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = bUrl;
+                    a.download = name;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                } catch(e) { window.open(url, '_blank'); }
+            };
+
+            // --- API ---
+            const checkConnection = async (url, silent = false) => {
+                if (!url) return;
+                if (!silent) setConnectionStatus('connecting');
+                
+                let clean = url.trim().replace(/\/$/, '');
+                if (!clean.startsWith('http')) clean = 'https://' + clean; 
+
+                try {
+                    const c = new AbortController();
+                    const id = setTimeout(() => c.abort(), 5000);
+                    const res = await fetch(`${clean}/system_stats`, { signal: c.signal });
+                    clearTimeout(id);
+
+                    if (res.ok) {
+                        setIsConnected(true);
+                        setConnectionStatus('connected');
+                        if (clean !== url) {
+                            setServerUrl(clean);
+                            localStorage.setItem('comfy_url', clean);
+                        }
+                        fetchModels(clean);
+                        if (!silent) setActiveTab('generate');
+                    } else throw new Error(res.status);
+                } catch (e) {
+                    setIsConnected(false);
+                    setConnectionStatus('error');
+                    if (!silent) alert("Erro: " + e.message);
+                }
+            };
+
+            const fetchModels = async (url) => {
+                try {
+                    const res = await fetch(`${url}/object_info/CheckpointLoaderSimple`);
+                    const data = await res.json();
+                    const list = data.CheckpointLoaderSimple?.input?.required?.ckpt_name[0] || [];
+                    setModels(list);
+                    if (!selectedModel && list.length > 0 && !isModelLocked) setSelectedModel(list[0]);
+                } catch(e) {}
+            };
+
+            // --- LOGICA RECURSIVA ---
+            const findAndSetInput = (wf, nodeId, val) => {
+                const node = wf[nodeId];
+                if (!node || !node.inputs) return;
+                const keys = ['text','text_g','text_l','string','text_input','src','src_text','prompt','user_prompt','input_text','message'];
+                
+                for (const k of keys) {
+                    if (node.inputs[k] !== undefined) {
+                        if (Array.isArray(node.inputs[k])) findAndSetInput(wf, node.inputs[k][0], val);
+                        else if (typeof node.inputs[k] === 'string' || node.inputs[k] === "") {
+                            node.inputs[k] = val;
+                            return;
+                        }
+                    }
+                }
+            };
+
+            // --- GERAR ---
+            const generate = async () => {
+                if (!isConnected) return setActiveTab('settings');
+                setIsGenerating(true);
+
+                const finalImgSeed = imageSeed === -1 ? Math.floor(Math.random()*1e9) : imageSeed;
+                const finalLlmSeed = llmSeed === -1 ? Math.floor(Math.random()*1e9) : llmSeed;
+                const clientId = crypto.randomUUID();
+                
+                let wf = JSON.parse(JSON.stringify(customWorkflow || WORKFLOW_FALLBACK));
+
+                Object.keys(wf).forEach(nid => {
+                    const node = wf[nid];
+                    const type = node.class_type.toLowerCase();
+                    const inp = node.inputs;
+
+                    if (type.includes("ksampler")) {
+                        if(inp.seed!==undefined) inp.seed = finalImgSeed;
+                        if(inp.noise_seed!==undefined) inp.noise_seed = finalImgSeed;
+                        if(inp.steps!==undefined) inp.steps = steps;
+                        if(inp.cfg!==undefined) inp.cfg = cfg;
+                        if(inp.sampler_name!==undefined) inp.sampler_name = sampler;
+                        if(inp.scheduler!==undefined) inp.scheduler = scheduler;
+                        if(positivePrompt && Array.isArray(inp.positive)) findAndSetInput(wf, inp.positive[0], positivePrompt);
+                        if(negativePrompt && Array.isArray(inp.negative)) findAndSetInput(wf, inp.negative[0], negativePrompt);
+                    }
+
+                    if (type.includes("lmstudio") || type.includes("llm") || type.includes("chat") || type.includes("text generator")) {
+                        if(inp.seed!==undefined) inp.seed = finalLlmSeed;
+                    }
+
+                    if (!isModelLocked && type === "checkpointloadersimple" && selectedModel) {
+                        inp.ckpt_name = selectedModel;
+                    }
+
+                    if (["emptylatentimage","emptysd3latentimage","emptyfluxlatentimage"].includes(type)) {
+                        inp.width = imageSize.w; inp.height = imageSize.h;
+                    }
+                });
+
+                try {
+                    const res = await fetch(`${serverUrl}/prompt`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ client_id: clientId, prompt: wf })
+                    });
+                    const d = await res.json();
+                    
+                    let attempts = 0;
+                    const poll = setInterval(async () => {
+                        attempts++;
+                        if (attempts > 120) { clearInterval(poll); setIsGenerating(false); return; }
+                        try {
+                            const hRes = await fetch(`${serverUrl}/history/${d.prompt_id}`);
+                            const hData = await hRes.json();
+                            if (hData[d.prompt_id]) {
+                                const out = hData[d.prompt_id].outputs;
+                                const k = Object.keys(out).find(x => out[x].images);
+                                if (k) {
+                                    const img = out[k].images[0];
+                                    const url = `${serverUrl}/view?filename=${img.filename}&subfolder=${img.subfolder}&type=${img.type}`;
+                                    const item = { url, imageSeed: finalImgSeed, llmSeed: finalLlmSeed, prompt: positivePrompt, steps };
+                                    setLastImage(item);
+                                    setHistory(prev => [item, ...prev]);
+                                    localStorage.setItem('comfy_history', JSON.stringify([item, ...history].slice(0,20)));
+                                    clearInterval(poll);
+                                    setIsGenerating(false);
+                                }
+                            }
+                        } catch(e) {}
+                    }, 1000);
+                } catch(e) { alert(e.message); setIsGenerating(false); }
+            };
+
+            // --- FILE ---
+            const handleJson = (e) => {
+                const f = e.target.files[0];
+                if(!f) return;
+                const r = new FileReader();
+                r.onload = (ev) => {
+                    try {
+                        const j = JSON.parse(ev.target.result);
+                        if(j.nodes) return alert("Use API Format");
+                        setCustomWorkflow(j);
+                        setCustomWorkflowName(f.name.replace('.json',''));
+                        
+                        const kid = Object.keys(j).find(k=>j[k].class_type?.includes("KSampler"));
+                        if(kid) {
+                            const i = j[kid].inputs;
+                            setSteps(i.steps||20); setCfg(i.cfg||7);
+                        }
+                        const complex = ["UNETLoader","DualCLIPLoader","Load Diffusion Model"].some(t=>Object.values(j).some(n=>n.class_type===t));
+                        setIsModelLocked(complex);
+                        alert(complex ? "Modo Avançado: Modelo Travado, Steps Liberados!" : "Workflow Carregado");
+                        setActiveTab('generate');
+                    } catch(err) { alert("JSON Inválido"); }
+                };
+                r.readAsText(f);
+            };
+
+            const savePreset = () => {
+                const n = prompt("Nome:");
+                if(n) {
+                    const p = {name:n, positivePrompt, negativePrompt, steps, cfg, sampler, scheduler, imageSeed, llmSeed, imageSize, customWorkflow, customWorkflowName, isModelLocked, selectedModel};
+                    const up = [...presets, p];
+                    setPresets(up);
+                    localStorage.setItem('comfy_presets', JSON.stringify(up));
+                }
+            };
+
+            const loadPreset = (p) => {
+                setPositivePrompt(p.positivePrompt); setNegativePrompt(p.negativePrompt); setImageSize(p.imageSize);
+                setSteps(p.steps); setCfg(p.cfg); setSampler(p.sampler); setScheduler(p.scheduler);
+                setImageSeed(p.imageSeed||-1); setLlmSeed(p.llmSeed||-1);
+                if(p.selectedModel) setSelectedModel(p.selectedModel);
+                setCustomWorkflow(p.customWorkflow); setCustomWorkflowName(p.customWorkflowName); setIsModelLocked(!!p.isModelLocked);
+                setActiveTab('generate');
+            };
+
+            // --- RENDER ---
+            const NavItem = ({id, icon:Icon, label}) => (
+                <button onClick={()=>setActiveTab(id)} className={`flex flex-col items-center justify-center w-16 h-14 ${activeTab===id?'text-emerald-400':'text-neutral-500'} active:scale-95 transition-all`}>
+                    <Icon size={24} strokeWidth={activeTab===id?2.5:2} />
+                    <span className="text-[10px] font-bold mt-1">{label}</span>
+                </button>
+            );
+
+            return (
+                <div className="min-h-screen pb-24 font-sans">
+                    {/* Header */}
+                    <div onClick={()=>setActiveTab('settings')} className={`p-3 px-4 flex justify-between items-center ${isConnected?'bg-emerald-900/30 border-b border-emerald-800':'bg-red-900/30 border-b border-red-800'} transition-colors`}>
+                        <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${isConnected?'bg-emerald-400 shadow-[0_0_8px_#34d399]':'bg-red-500'}`}></div>
+                            <span className="text-xs font-bold uppercase tracking-wider text-neutral-300">{isConnected?'Online':'Offline'}</span>
+                        </div>
+                        <span className="text-[10px] font-mono opacity-50 truncate max-w-[150px]">{serverUrl||'Configurar'}</span>
+                    </div>
+
+                    {/* GENERATE */}
+                    {activeTab === 'generate' && (
+                        <div className="p-4 space-y-5 fade-in">
+                            <div className="aspect-square bg-neutral-900 rounded-2xl overflow-hidden relative shadow-2xl border border-neutral-800 flex items-center justify-center">
+                                {lastImage ? (
+                                    <>
+                                        <img src={lastImage.url} className="w-full h-full object-contain bg-black" />
+                                        <button onClick={(e)=>{e.stopPropagation();downloadImage(lastImage.url, `img_${lastImage.imageSeed}.png`)}} className="absolute top-3 right-3 bg-black/60 text-white p-2 rounded-full border border-white/20 active:scale-90"><Download size={20}/></button>
+                                    </>
+                                ) : <div className="text-neutral-700 flex flex-col items-center"><ImageIcon size={48}/><span className="text-xs mt-2">Pronto</span></div>}
+                                {isGenerating && <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-20"><RefreshCw className="animate-spin text-emerald-500 mb-2" size={32}/><span className="text-emerald-500 font-bold tracking-widest text-sm">CRIANDO...</span></div>}
+                            </div>
+
+                            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                                {customWorkflow ? 
+                                    <div className="flex items-center gap-2 bg-purple-900/30 border border-purple-500/30 px-3 py-1.5 rounded-full text-[10px] text-purple-200 shrink-0"><FileJson size={12}/> {customWorkflowName} <button onClick={()=>{setCustomWorkflow(null);setCustomWorkflowName('');setIsModelLocked(false)}} className="ml-2"><X size={10}/></button></div> 
+                                    : <div className="flex items-center gap-2 bg-blue-900/20 border border-blue-500/30 px-3 py-1.5 rounded-full text-[10px] text-blue-200 shrink-0"><Zap size={12}/> Padrão</div>
+                                }
+                                {isModelLocked && <div className="flex items-center gap-2 bg-yellow-900/20 border border-yellow-500/30 px-3 py-1.5 rounded-full text-[10px] text-yellow-200 shrink-0"><Lock size={12}/> Modelo Travado</div>}
+                            </div>
+
+                            <div className="space-y-3">
+                                <textarea value={positivePrompt} onChange={e=>setPositivePrompt(e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-4 text-sm focus:border-emerald-500/50 outline-none min-h-[100px]" placeholder="Prompt Positivo" />
+                                <input value={negativePrompt} onChange={e=>setNegativePrompt(e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-3 text-xs text-red-200/80 focus:border-red-900/50 outline-none" placeholder="Negativo" />
+                            </div>
+
+                            <div className="border border-neutral-800 rounded-xl overflow-hidden bg-neutral-900/30">
+                                <button onClick={()=>setShowAdvanced(!showAdvanced)} className="w-full p-3 flex justify-between items-center text-xs font-bold text-neutral-400 hover:text-white"><span className="flex items-center gap-2"><Sliders size={14}/> Ajustes</span> {showAdvanced?<ChevronUp size={14}/>:<ChevronDown size={14}/>}</button>
+                                {showAdvanced && (
+                                    <div className="p-4 space-y-5 border-t border-neutral-800 fade-in">
+                                        <div className="grid grid-cols-2 gap-6">
+                                            <div className="space-y-2"><div className="flex justify-between text-[10px] uppercase font-bold text-neutral-500"><span>Steps</span> <span className="text-emerald-400">{steps}</span></div><input type="range" min="1" max="60" value={steps} onChange={e=>setSteps(Number(e.target.value))} className="w-full h-1.5 bg-neutral-700 rounded-lg"/></div>
+                                            <div className="space-y-2"><div className="flex justify-between text-[10px] uppercase font-bold text-neutral-500"><span>CFG</span> <span className="text-emerald-400">{cfg}</span></div><input type="range" min="0.5" max="20" step="0.1" value={cfg} onChange={e=>setCfg(Number(e.target.value))} className="w-full h-1.5 bg-neutral-700 rounded-lg"/></div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3 pt-2 border-t border-neutral-800/50">
+                                            <div><label className="text-[10px] uppercase font-bold text-neutral-500 mb-1.5 flex gap-1"><Aperture size={10}/> Img Seed</label><div className="flex gap-2"><input type="number" value={imageSeed} onChange={e=>setImageSeed(Number(e.target.value))} className="w-full bg-neutral-800 text-xs rounded-lg p-2.5 outline-none border border-neutral-700"/><button onClick={()=>setImageSeed(-1)} className="bg-neutral-800 px-3 rounded-lg border border-neutral-700 text-neutral-400"><RefreshCw size={14}/></button></div></div>
+                                            <div><label className="text-[10px] uppercase font-bold text-purple-400 mb-1.5 flex gap-1"><Brain size={10}/> LLM Seed</label><div className="flex gap-2"><input type="number" value={llmSeed} onChange={e=>setLlmSeed(Number(e.target.value))} className="w-full bg-neutral-800 text-xs rounded-lg p-2.5 outline-none border border-purple-500/30"/><button onClick={()=>setLlmSeed(-1)} className="bg-neutral-800 px-3 rounded-lg border border-purple-500/30 text-purple-400"><RefreshCw size={14}/></button></div></div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div><label className="text-[10px] font-bold text-neutral-500 block mb-1">Sampler</label><select value={sampler} onChange={e=>setSampler(e.target.value)} className="w-full bg-neutral-800 text-xs rounded-lg p-2 border border-neutral-700">{SAMPLERS.map(s=><option key={s} value={s}>{s}</option>)}</select></div>
+                                            <div><label className="text-[10px] font-bold text-neutral-500 block mb-1">Tamanho</label><select value={`${imageSize.w}x${imageSize.h}`} onChange={e=>{const[w,h]=e.target.value.split('x').map(Number);setImageSize({w,h})}} className="w-full bg-neutral-800 text-xs rounded-lg p-2 border border-neutral-700"><option value="512x512">512x512</option><option value="512x768">512x768</option><option value="768x512">768x512</option><option value="1024x1024">SDXL 1024</option><option value="768x1152">Z-Turbo</option></select></div>
+                                        </div>
+                                        <div className={isModelLocked?'opacity-50 pointer-events-none':''}><label className="text-[10px] font-bold text-neutral-500 block mb-1">Modelo {isModelLocked && '(Fixo)'}</label><select value={selectedModel} onChange={e=>setSelectedModel(e.target.value)} className="w-full bg-neutral-800 text-xs rounded-lg p-2 border border-neutral-700 truncate" disabled={isModelLocked}>{models.map(m=><option key={m} value={m}>{m}</option>)}</select></div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex gap-3 pt-2">
+                                <button onClick={savePreset} className="bg-neutral-800 text-neutral-400 p-4 rounded-xl border border-neutral-800 active:scale-95"><Save size={20}/></button>
+                                <button onClick={generate} disabled={isGenerating||!isConnected} className={`flex-1 font-bold text-lg rounded-xl flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] ${isGenerating?'bg-neutral-800 text-neutral-500':'bg-emerald-600 text-white shadow-emerald-900/20'}`}>{isGenerating?'...':'GERAR'}</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* LIBRARY */}
+                    {activeTab === 'library' && (
+                        <div className="p-4 space-y-6 fade-in">
+                            <div className="bg-neutral-900 border border-neutral-800 p-5 rounded-2xl relative overflow-hidden">
+                                <h3 className="text-sm font-bold text-purple-400 mb-2 flex items-center gap-2"><FileJson size={16}/> Importar Workflow</h3>
+                                <label className="block w-full bg-neutral-950/50 border border-dashed border-neutral-700 p-4 rounded-xl text-center text-xs text-neutral-400 cursor-pointer">{customWorkflowName || 'Selecionar JSON'}<input type="file" accept=".json" onChange={handleJson} className="hidden"/></label>
+                            </div>
+                            <div className="space-y-2">
+                                {presets.map((p,i)=>(
+                                    <div key={i} className="bg-neutral-900 border border-neutral-800 p-4 rounded-2xl flex justify-between items-center"><div onClick={()=>loadPreset(p)} className="flex-1 cursor-pointer"><h4 className="font-bold text-sm text-neutral-200">{p.name}</h4><span className="text-xs text-neutral-500">{p.steps} steps</span></div><button onClick={()=>{const n=presets.filter((_,x)=>x!==i);setPresets(n);localStorage.setItem('comfy_presets',JSON.stringify(n))}} className="text-red-500 p-2"><Trash2 size={18}/></button></div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* SETTINGS */}
+                    {activeTab === 'settings' && (
+                        <div className="p-5 fade-in">
+                            <div className="bg-neutral-900 p-6 rounded-3xl border border-neutral-800 space-y-6">
+                                <div className="flex items-center gap-3 text-neutral-200"><div className="bg-neutral-800 p-2.5 rounded-xl"><Settings size={24}/></div><div><h2 className="text-lg font-bold">Conexão</h2><p className="text-xs text-neutral-500">v10.0 Persistence</p></div></div>
+                                <div><label className="text-xs font-bold text-neutral-500 uppercase ml-1 mb-1.5 block">URL</label><div className="flex gap-2"><input value={serverUrl} onChange={handleUrlChange} className="flex-1 bg-neutral-950 border-2 border-neutral-800 rounded-xl p-4 font-mono text-sm focus:border-emerald-500 outline-none" placeholder="https://seu-pc.ts.net:8443" /><button onClick={handlePaste} className="bg-neutral-800 px-4 rounded-xl text-neutral-400"><Clipboard size={20}/></button></div></div>
+                                <button onClick={()=>checkConnection(serverUrl)} className="w-full py-4 rounded-xl font-bold bg-neutral-100 text-black flex justify-center items-center gap-2 active:scale-95">{isConnected?<CheckCircle size={20}/>:<RefreshCw size={20}/>} {isConnected?'Reconectar':'Conectar'}</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* HISTORY */}
+                    {activeTab === 'history' && (
+                        <div className="p-4 grid grid-cols-2 gap-3 fade-in pb-20">
+                            {history.map((img,i)=>(
+                                <div key={i} className="rounded-2xl overflow-hidden relative bg-neutral-900 aspect-square shadow-lg">
+                                    <img src={img.url} className="w-full h-full object-cover" />
+                                    <button onClick={()=>downloadImage(img.url, `galeria_${i}.png`)} className="absolute bottom-2 right-2 bg-black/60 text-white p-2 rounded-full backdrop-blur"><Download size={16}/></button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* NAV */}
+                    <div className="fixed bottom-0 w-full bg-neutral-950/90 backdrop-blur border-t border-neutral-900 flex justify-around p-2 pb-6 z-50">
+                        <NavItem id="settings" icon={Settings} label="Config"/>
+                        <NavItem id="generate" icon={Zap} label="Studio"/>
+                        <NavItem id="library" icon={FolderOpen} label="Presets"/>
+                        <NavItem id="history" icon={History} label="Galeria"/>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
