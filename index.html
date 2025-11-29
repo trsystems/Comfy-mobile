@@ -3,36 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ComfyUI Studio V11</title>
+    <title>ComfyUI Studio V12</title>
     <meta name="theme-color" content="#0a0a0a">
-    <meta name="mobile-web-app-capable" content="yes">
     
-    <!-- PWA Manifest -->
-    <script>
-        const manifest = {
-            "name": "ComfyUI Studio",
-            "short_name": "ComfyUI",
-            "start_url": ".",
-            "display": "standalone",
-            "background_color": "#0a0a0a",
-            "theme_color": "#0a0a0a",
-            "icons": [{
-                "src": "https://cdnjs.cloudflare.com/ajax/libs/octicons/8.5.0/svg/zap.svg",
-                "sizes": "192x192",
-                "type": "image/svg+xml"
-            }]
-        };
-        const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
-        const link = document.createElement('link');
-        link.rel = 'manifest';
-        link.href = URL.createObjectURL(blob);
-        document.head.appendChild(link);
-    </script>
-
-    <!-- Tailwind CSS (CDN Robusto) -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- React Dependencies (CDN Robusto) -->
+    <!-- React Dependencies -->
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
@@ -44,39 +21,13 @@
         input[type="range"] { accent-color: #10b981; }
         .fade-in { animation: fadeIn 0.3s ease-in; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* Loading Screen */
-        #loader-screen { position: fixed; inset: 0; background: #0a0a0a; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s; }
-        .loader-bar-bg { width: 200px; height: 4px; background: #333; border-radius: 4px; overflow: hidden; margin-top: 20px; }
-        .loader-bar { width: 50%; height: 100%; background: #10b981; animation: load 1s infinite ease-in-out alternate; }
-        @keyframes load { from { transform: translateX(-100%); } to { transform: translateX(200%); } }
     </style>
 </head>
 <body>
-    
-    <!-- Tela de Carregamento Nativa -->
-    <div id="loader-screen">
-        <h2 style="color:white; font-weight:bold; font-size: 24px;">ComfyUI Studio</h2>
-        <div class="loader-bar-bg"><div id="loading-bar" class="loader-bar"></div></div>
-        <p id="loading-msg" style="color:#666; margin-top:15px; font-size: 12px;">Inicializando módulos...</p>
-        <button id="retry-btn" onclick="window.location.reload()" style="display:none; margin-top:20px; color:white; border:1px solid #333; padding:10px 20px; border-radius:8px; background:transparent;">Recarregar</button>
-    </div>
-
     <div id="root"></div>
 
-    <!-- Script de Segurança: Se demorar > 5s, mostra erro -->
-    <script>
-        setTimeout(() => {
-            const loader = document.getElementById('loader-screen');
-            if (loader && loader.style.display !== 'none') {
-                document.getElementById('loading-msg').innerText = "Demorando mais que o esperado...";
-                document.getElementById('retry-btn').style.display = 'block';
-            }
-        }, 8000);
-    </script>
-
     <script type="text/babel">
-        // --- ÍCONES SVG INLINE (Zero Dependência Externa) ---
+        // --- ÍCONES SVG ---
         const Icons = {
             Zap: (p) => <svg {...p} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
             Settings: (p) => <svg {...p} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>,
@@ -96,6 +47,7 @@
             Clipboard: (p) => <svg {...p} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>,
             Brain: (p) => <svg {...p} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/><path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/><path d="M17.599 6.5a3 3 0 0 0 .399-1.375"/><path d="M6.003 5.125A3 3 0 0 0 6.401 6.5"/><path d="M3.477 10.896a4 4 0 0 1 .585-.396"/><path d="M19.938 10.5a4 4 0 0 1 .585.396"/><path d="M6 18a4 4 0 0 1-1.97-3.284"/><path d="M17.97 14.716A4 4 0 0 1 18 18"/></svg>,
             Aperture: (p) => <svg {...p} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="m14.31 8 5.74 9.94"/><path d="M9.69 8h11.48"/><path d="m7.38 12 5.74-9.94"/><path d="M9.69 16 3.95 6.06"/><path d="M14.31 16H2.83"/><path d="m16.62 12-5.74 9.94"/></svg>,
+            List: (p) => <svg {...p} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>,
             X: (p) => <svg {...p} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 18 18"/></svg>
         };
 
@@ -114,7 +66,6 @@
         };
 
         function App() {
-            // --- ESTADOS ---
             const [serverUrl, setServerUrl] = useState(() => localStorage.getItem('comfy_url') || '');
             const [activeTab, setActiveTab] = useState('settings');
             const [isConnected, setIsConnected] = useState(false);
@@ -129,32 +80,25 @@
             const [sampler, setSampler] = useState('euler');
             const [scheduler, setScheduler] = useState('normal');
             
-            // Seeds
             const [imageSeed, setImageSeed] = useState(-1);
             const [llmSeed, setLlmSeed] = useState(-1);
             
-            // UI
             const [showAdvanced, setShowAdvanced] = useState(false);
+            const [showTagEditor, setShowTagEditor] = useState(false);
             const [isGenerating, setIsGenerating] = useState(false);
+            const [isLlmLoading, setIsLlmLoading] = useState(false);
             
-            // Data
             const [models, setModels] = useState([]);
             const [selectedModel, setSelectedModel] = useState('');
             const [history, setHistory] = useState([]);
             const [lastImage, setLastImage] = useState(null);
             const [presets, setPresets] = useState([]);
             
-            // Workflow
             const [customWorkflow, setCustomWorkflow] = useState(null); 
             const [customWorkflowName, setCustomWorkflowName] = useState('');
             const [isModelLocked, setIsModelLocked] = useState(false);
 
-            // --- INICIALIZAÇÃO ---
             useEffect(() => {
-                // Remove Loader
-                const loader = document.getElementById('loader-screen');
-                if(loader) loader.style.display = 'none';
-
                 if (serverUrl) checkConnection(serverUrl, true);
                 try {
                     const sp = localStorage.getItem('comfy_presets');
@@ -164,7 +108,6 @@
                 } catch(e) {}
             }, []);
 
-            // --- HANDLERS ---
             const handleUrlChange = (e) => {
                 setServerUrl(e.target.value);
                 localStorage.setItem('comfy_url', e.target.value);
@@ -173,10 +116,7 @@
             const handlePaste = async () => {
                 try {
                     const text = await navigator.clipboard.readText();
-                    if (text) {
-                        setServerUrl(text);
-                        localStorage.setItem('comfy_url', text);
-                    }
+                    if (text) { setServerUrl(text); localStorage.setItem('comfy_url', text); }
                 } catch (err) { alert("Use o colar do teclado (Permissão negada)"); }
             };
 
@@ -185,36 +125,62 @@
                     const res = await fetch(url);
                     const blob = await res.blob();
                     const bUrl = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = bUrl;
-                    a.download = name;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
+                    const a = document.createElement('a'); a.href = bUrl; a.download = name;
+                    document.body.appendChild(a); a.click(); document.body.removeChild(a);
                 } catch(e) { window.open(url, '_blank'); }
             };
 
-            // --- API ---
+            // --- LLM GENERATION ---
+            const generateFromLLM = async () => {
+                if (!positivePrompt) return alert("Digite uma ideia básica primeiro!");
+                setIsLlmLoading(true);
+                try {
+                    const ipMatch = serverUrl.match(/:\/\/(.[^/]+)/);
+                    if (!ipMatch) throw new Error("IP inválido");
+                    const cleanIp = ipMatch[1].split(':')[0]; 
+                    const llmUrl = `http://${cleanIp}:1234/v1/chat/completions`;
+
+                    const payload = {
+                        messages: [
+                            { role: "system", content: "You are a prompt generator. Output raw prompt tags separated by commas. Focus on visual description." },
+                            { role: "user", content: `Create detailed prompt for: ${positivePrompt}` }
+                        ],
+                        temperature: 0.7,
+                        max_tokens: 300
+                    };
+
+                    const res = await fetch(llmUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const data = await res.json();
+                    if (data.choices && data.choices[0]) {
+                        setPositivePrompt(data.choices[0].message.content);
+                        setShowTagEditor(true);
+                    }
+                } catch (e) {
+                    alert("Erro LLM: " + e.message + "\nCertifique-se que o LM Studio está rodando (Porta 1234) e CORS ativado.");
+                } finally {
+                    setIsLlmLoading(false);
+                }
+            };
+
             const checkConnection = async (url, silent = false) => {
                 if (!url) return;
                 if (!silent) setConnectionStatus('connecting');
-                
                 let clean = url.trim().replace(/\/$/, '');
                 if (!clean.startsWith('http')) clean = 'https://' + clean; 
-
                 try {
                     const c = new AbortController();
                     const id = setTimeout(() => c.abort(), 5000);
                     const res = await fetch(`${clean}/system_stats`, { signal: c.signal });
                     clearTimeout(id);
-
                     if (res.ok) {
                         setIsConnected(true);
                         setConnectionStatus('connected');
-                        if (clean !== url) {
-                            setServerUrl(clean);
-                            localStorage.setItem('comfy_url', clean);
-                        }
+                        if (clean !== url) { setServerUrl(clean); localStorage.setItem('comfy_url', clean); }
                         fetchModels(clean);
                         if (!silent) setActiveTab('generate');
                     } else throw new Error(res.status);
@@ -235,32 +201,36 @@
                 } catch(e) {}
             };
 
-            // --- LOGICA RECURSIVA ---
-            const findAndSetInput = (wf, nodeId, val) => {
-                const node = wf[nodeId];
-                if (!node || !node.inputs) return;
-                const keys = ['text','text_g','text_l','string','text_input','src','src_text','prompt','user_prompt','input_text','message'];
+            // --- INJEÇÃO INTELIGENTE (V12) ---
+            const injectTextIntoWorkflow = (wf, text, type) => {
+                const kSamplerId = Object.keys(wf).find(k => wf[k].class_type.toLowerCase().includes("ksampler"));
+                if (!kSamplerId) return;
+
+                const kInputs = wf[kSamplerId].inputs;
+                const linkKey = type === 'positive' ? 'positive' : 'negative';
                 
-                for (const k of keys) {
-                    if (node.inputs[k] !== undefined) {
-                        if (Array.isArray(node.inputs[k])) findAndSetInput(wf, node.inputs[k][0], val);
-                        else if (typeof node.inputs[k] === 'string' || node.inputs[k] === "") {
-                            node.inputs[k] = val;
-                            return;
-                        }
+                if (Array.isArray(kInputs[linkKey])) {
+                    const targetId = kInputs[linkKey][0];
+                    if (wf[targetId] && wf[targetId].inputs) {
+                        console.log(`Injecting ${type} into node ${targetId}`);
+                        if (wf[targetId].inputs.text !== undefined) wf[targetId].inputs.text = text;
+                        if (wf[targetId].inputs.text_g !== undefined) wf[targetId].inputs.text_g = text;
+                        if (wf[targetId].inputs.text_l !== undefined) wf[targetId].inputs.text_l = text;
+                        
+                        // Break links
+                        ['text', 'text_g', 'text_l'].forEach(k => {
+                            if (Array.isArray(wf[targetId].inputs[k])) wf[targetId].inputs[k] = text;
+                        });
                     }
                 }
             };
 
-            // --- GERAR ---
             const generate = async () => {
                 if (!isConnected) return setActiveTab('settings');
                 setIsGenerating(true);
 
                 const finalImgSeed = imageSeed === -1 ? Math.floor(Math.random()*1e9) : imageSeed;
-                const finalLlmSeed = llmSeed === -1 ? Math.floor(Math.random()*1e9) : llmSeed;
                 const clientId = crypto.randomUUID();
-                
                 let wf = JSON.parse(JSON.stringify(customWorkflow || WORKFLOW_FALLBACK));
 
                 Object.keys(wf).forEach(nid => {
@@ -275,22 +245,13 @@
                         if(inp.cfg!==undefined) inp.cfg = cfg;
                         if(inp.sampler_name!==undefined) inp.sampler_name = sampler;
                         if(inp.scheduler!==undefined) inp.scheduler = scheduler;
-                        if(positivePrompt && Array.isArray(inp.positive)) findAndSetInput(wf, inp.positive[0], positivePrompt);
-                        if(negativePrompt && Array.isArray(inp.negative)) findAndSetInput(wf, inp.negative[0], negativePrompt);
                     }
-
-                    if (type.includes("lmstudio") || type.includes("llm") || type.includes("chat") || type.includes("text generator")) {
-                        if(inp.seed!==undefined) inp.seed = finalLlmSeed;
-                    }
-
-                    if (!isModelLocked && type === "checkpointloadersimple" && selectedModel) {
-                        inp.ckpt_name = selectedModel;
-                    }
-
-                    if (["emptylatentimage","emptysd3latentimage","emptyfluxlatentimage"].includes(type)) {
-                        inp.width = imageSize.w; inp.height = imageSize.h;
-                    }
+                    if (!isModelLocked && type === "checkpointloadersimple" && selectedModel) inp.ckpt_name = selectedModel;
+                    if (["emptylatentimage","emptysd3latentimage"].includes(type)) { inp.width = imageSize.w; inp.height = imageSize.h; }
                 });
+
+                if (positivePrompt) injectTextIntoWorkflow(wf, positivePrompt, 'positive');
+                if (negativePrompt) injectTextIntoWorkflow(wf, negativePrompt, 'negative');
 
                 try {
                     const res = await fetch(`${serverUrl}/prompt`, {
@@ -313,7 +274,7 @@
                                 if (k) {
                                     const img = out[k].images[0];
                                     const url = `${serverUrl}/view?filename=${img.filename}&subfolder=${img.subfolder}&type=${img.type}`;
-                                    const item = { url, imageSeed: finalImgSeed, llmSeed: finalLlmSeed, prompt: positivePrompt, steps };
+                                    const item = { url, imageSeed: finalImgSeed, prompt: positivePrompt, steps };
                                     setLastImage(item);
                                     setHistory(prev => [item, ...prev]);
                                     localStorage.setItem('comfy_history', JSON.stringify([item, ...history].slice(0,20)));
@@ -326,7 +287,6 @@
                 } catch(e) { alert(e.message); setIsGenerating(false); }
             };
 
-            // --- FILE ---
             const handleJson = (e) => {
                 const f = e.target.files[0];
                 if(!f) return;
@@ -337,15 +297,14 @@
                         if(j.nodes) return alert("Use API Format");
                         setCustomWorkflow(j);
                         setCustomWorkflowName(f.name.replace('.json',''));
-                        
-                        const kid = Object.keys(j).find(k=>j[k].class_type?.includes("KSampler"));
+                        const kid = Object.keys(j).find(k=>j[k].class_type?.toLowerCase().includes("ksampler"));
                         if(kid) {
                             const i = j[kid].inputs;
                             setSteps(i.steps||20); setCfg(i.cfg||7);
                         }
                         const complex = ["UNETLoader","DualCLIPLoader","Load Diffusion Model"].some(t=>Object.values(j).some(n=>n.class_type===t));
                         setIsModelLocked(complex);
-                        alert(complex ? "Modo Avançado: Modelo Travado, Steps Liberados!" : "Workflow Carregado");
+                        alert("Workflow Carregado v12!");
                         setActiveTab('generate');
                     } catch(err) { alert("JSON Inválido"); }
                 };
@@ -371,7 +330,28 @@
                 setActiveTab('generate');
             };
 
-            // --- RENDER ---
+            const TagEditor = () => {
+                const tags = positivePrompt.split(',').map(t => t.trim()).filter(t => t);
+                const updateTags = (newTags) => setPositivePrompt(newTags.join(', '));
+                return (
+                    <div className="fixed inset-0 bg-black/95 z-50 p-4 flex flex-col fade-in">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-bold text-white flex gap-2"><Icons.List size={20}/> Editor de Tags</h3>
+                            <button onClick={() => setShowTagEditor(false)}><Icons.X size={24} className="text-neutral-400"/></button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto space-y-2">
+                            {tags.map((tag, i) => (
+                                <div key={i} className="flex gap-2 items-center bg-neutral-900 p-3 rounded-xl border border-neutral-800">
+                                    <input className="flex-1 bg-transparent text-sm outline-none text-emerald-300 font-mono" value={tag} onChange={(e) => { const n = [...tags]; n[i] = e.target.value; updateTags(n); }} />
+                                    <button onClick={() => { const n = tags.filter((_, idx) => idx !== i); updateTags(n); }} className="text-red-500 p-1"><Icons.Trash2 size={16}/></button>
+                                </div>
+                            ))}
+                        </div>
+                        <button onClick={() => setShowTagEditor(false)} className="mt-4 w-full bg-emerald-600 py-3 rounded-xl font-bold text-white">Confirmar</button>
+                    </div>
+                );
+            };
+
             const NavItem = ({id, icon:Icon, label}) => (
                 <button onClick={()=>setActiveTab(id)} className={`flex flex-col items-center justify-center w-16 h-14 ${activeTab===id?'text-emerald-400':'text-neutral-500'} active:scale-95 transition-all`}>
                     <Icon size={24} strokeWidth={activeTab===id?2.5:2} />
@@ -381,6 +361,8 @@
 
             return (
                 <div className="min-h-screen pb-24 font-sans">
+                    {showTagEditor && <TagEditor />}
+                    
                     {/* Header */}
                     <div onClick={()=>setActiveTab('settings')} className={`p-3 px-4 flex justify-between items-center ${isConnected?'bg-emerald-900/30 border-b border-emerald-800':'bg-red-900/30 border-b border-red-800'} transition-colors`}>
                         <div className="flex items-center gap-2">
@@ -412,7 +394,13 @@
                             </div>
 
                             <div className="space-y-3">
-                                <textarea value={positivePrompt} onChange={e=>setPositivePrompt(e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-4 text-sm focus:border-emerald-500/50 outline-none min-h-[100px]" placeholder="Prompt Positivo" />
+                                <div className="relative">
+                                    <textarea value={positivePrompt} onChange={e=>setPositivePrompt(e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-4 text-sm focus:border-emerald-500/50 outline-none min-h-[120px] pr-12" placeholder="Ideia (Ex: Anime girl blue hair...)" />
+                                    <div className="absolute right-2 top-2 flex flex-col gap-2">
+                                        <button onClick={generateFromLLM} disabled={isLlmLoading} className="bg-purple-600/20 text-purple-400 p-2 rounded-lg border border-purple-500/30 hover:bg-purple-600 hover:text-white transition-colors">{isLlmLoading ? <Icons.RefreshCw className="animate-spin" size={16}/> : <Icons.Brain size={16}/>}</button>
+                                        <button onClick={()=>setShowTagEditor(true)} className="bg-neutral-800 text-neutral-400 p-2 rounded-lg border border-neutral-700 hover:text-white transition-colors"><Icons.List size={16}/></button>
+                                    </div>
+                                </div>
                                 <input value={negativePrompt} onChange={e=>setNegativePrompt(e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-3 text-xs text-red-200/80 focus:border-red-900/50 outline-none" placeholder="Negativo" />
                             </div>
 
@@ -426,7 +414,6 @@
                                         </div>
                                         <div className="grid grid-cols-2 gap-3 pt-2 border-t border-neutral-800/50">
                                             <div><label className="text-[10px] uppercase font-bold text-neutral-500 mb-1.5 flex gap-1"><Icons.Aperture size={10}/> Img Seed</label><div className="flex gap-2"><input type="number" value={imageSeed} onChange={e=>setImageSeed(Number(e.target.value))} className="w-full bg-neutral-800 text-xs rounded-lg p-2.5 outline-none border border-neutral-700"/><button onClick={()=>setImageSeed(-1)} className="bg-neutral-800 px-3 rounded-lg border border-neutral-700 text-neutral-400"><Icons.RefreshCw size={14}/></button></div></div>
-                                            <div><label className="text-[10px] uppercase font-bold text-purple-400 mb-1.5 flex gap-1"><Icons.Brain size={10}/> LLM Seed</label><div className="flex gap-2"><input type="number" value={llmSeed} onChange={e=>setLlmSeed(Number(e.target.value))} className="w-full bg-neutral-800 text-xs rounded-lg p-2.5 outline-none border border-purple-500/30"/><button onClick={()=>setLlmSeed(-1)} className="bg-neutral-800 px-3 rounded-lg border border-purple-500/30 text-purple-400"><Icons.RefreshCw size={14}/></button></div></div>
                                         </div>
                                         <div className="grid grid-cols-2 gap-3">
                                             <div><label className="text-[10px] font-bold text-neutral-500 block mb-1">Sampler</label><select value={sampler} onChange={e=>setSampler(e.target.value)} className="w-full bg-neutral-800 text-xs rounded-lg p-2 border border-neutral-700">{SAMPLERS.map(s=><option key={s} value={s}>{s}</option>)}</select></div>
@@ -463,7 +450,7 @@
                     {activeTab === 'settings' && (
                         <div className="p-5 fade-in">
                             <div className="bg-neutral-900 p-6 rounded-3xl border border-neutral-800 space-y-6">
-                                <div className="flex items-center gap-3 text-neutral-200"><div className="bg-neutral-800 p-2.5 rounded-xl"><Icons.Settings size={24}/></div><div><h2 className="text-lg font-bold">Conexão</h2><p className="text-xs text-neutral-500">v11 Lite</p></div></div>
+                                <div className="flex items-center gap-3 text-neutral-200"><div className="bg-neutral-800 p-2.5 rounded-xl"><Icons.Settings size={24}/></div><div><h2 className="text-lg font-bold">Conexão</h2><p className="text-xs text-neutral-500">v12.0 LLM Direct</p></div></div>
                                 <div><label className="text-xs font-bold text-neutral-500 uppercase ml-1 mb-1.5 block">URL</label><div className="flex gap-2"><input value={serverUrl} onChange={handleUrlChange} className="flex-1 bg-neutral-950 border-2 border-neutral-800 rounded-xl p-4 font-mono text-sm focus:border-emerald-500 outline-none" placeholder="https://seu-pc.ts.net:8443" /><button onClick={handlePaste} className="bg-neutral-800 px-4 rounded-xl text-neutral-400"><Icons.Clipboard size={20}/></button></div></div>
                                 <button onClick={()=>checkConnection(serverUrl)} className="w-full py-4 rounded-xl font-bold bg-neutral-100 text-black flex justify-center items-center gap-2 active:scale-95">{isConnected?<Icons.CheckCircle size={20}/>:<Icons.RefreshCw size={20}/>} {isConnected?'Reconectar':'Conectar'}</button>
                             </div>
