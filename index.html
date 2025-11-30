@@ -3,31 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ComfyUI Studio V13</title>
+    <title>ComfyUI Studio V14</title>
     <meta name="theme-color" content="#0a0a0a">
     
-    <!-- PWA Manifest -->
-    <script>
-        const manifest = {
-            "name": "ComfyUI Studio",
-            "short_name": "ComfyUI",
-            "start_url": ".",
-            "display": "standalone",
-            "background_color": "#0a0a0a",
-            "theme_color": "#0a0a0a",
-            "icons": [{
-                "src": "https://cdnjs.cloudflare.com/ajax/libs/octicons/8.5.0/svg/zap.svg",
-                "sizes": "192x192",
-                "type": "image/svg+xml"
-            }]
-        };
-        const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
-        const link = document.createElement('link');
-        link.rel = 'manifest';
-        link.href = URL.createObjectURL(blob);
-        document.head.appendChild(link);
-    </script>
-
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -49,7 +27,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        // --- ÍCONES SVG ---
+        // --- ÍCONES SVG (Otimizados) ---
         const Icons = {
             Zap: (p) => <svg {...p} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
             Settings: (p) => <svg {...p} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>,
@@ -70,26 +48,57 @@
             Brain: (p) => <svg {...p} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/><path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/><path d="M17.599 6.5a3 3 0 0 0 .399-1.375"/><path d="M6.003 5.125A3 3 0 0 0 6.401 6.5"/><path d="M3.477 10.896a4 4 0 0 1 .585-.396"/><path d="M19.938 10.5a4 4 0 0 1 .585.396"/><path d="M6 18a4 4 0 0 1-1.97-3.284"/><path d="M17.97 14.716A4 4 0 0 1 18 18"/></svg>,
             Aperture: (p) => <svg {...p} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="m14.31 8 5.74 9.94"/><path d="M9.69 8h11.48"/><path d="m7.38 12 5.74-9.94"/><path d="M9.69 16 3.95 6.06"/><path d="M14.31 16H2.83"/><path d="m16.62 12-5.74 9.94"/></svg>,
             List: (p) => <svg {...p} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>,
-            X: (p) => <svg {...p} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 18 18"/></svg>
+            X: (p) => <svg {...p} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 18 18"/></svg>,
+            Repeat: (p) => <svg {...p} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>,
+            Terminal: (p) => <svg {...p} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
         };
 
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useCallback, memo } = React;
 
+        // --- TAG EDITOR (ISOLADO PARA PERFORMANCE E FOCO) ---
+        const TagEditor = memo(({ tags, onClose, onUpdate }) => {
+            return (
+                <div className="fixed inset-0 bg-black/95 z-50 p-4 flex flex-col fade-in">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-bold text-white flex gap-2"><Icons.List size={20}/> Editor de Tags</h3>
+                        <button onClick={onClose}><Icons.X size={24} className="text-neutral-400"/></button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto space-y-2 pb-20">
+                        {tags.map((tag, i) => (
+                            <div key={i} className="flex gap-2 items-center bg-neutral-900 p-3 rounded-xl border border-neutral-800">
+                                <input 
+                                    className="flex-1 bg-transparent text-sm outline-none text-emerald-300 font-mono"
+                                    value={tag}
+                                    onChange={(e) => {
+                                        const newTags = [...tags];
+                                        newTags[i] = e.target.value;
+                                        onUpdate(newTags);
+                                    }}
+                                />
+                                <button onClick={() => {
+                                    const newTags = tags.filter((_, idx) => idx !== i);
+                                    onUpdate(newTags);
+                                }} className="text-red-500 p-2"><Icons.Trash2 size={18}/></button>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="fixed bottom-0 left-0 right-0 p-4 bg-neutral-950/90 backdrop-blur">
+                        <button onClick={onClose} className="w-full bg-emerald-600 py-3.5 rounded-xl font-bold text-white shadow-lg active:scale-95 transition-transform">Confirmar Edição</button>
+                    </div>
+                </div>
+            );
+        });
+
+        // --- CONSTANTES ---
         const SAMPLERS = ["euler", "euler_ancestral", "heun", "dpm_2", "dpm_2_ancestral", "lms", "dpm_fast", "dpm_adaptive", "dpmpp_2s_ancestral", "dpmpp_2m", "dpmpp_2m_sde", "dpmpp_2m_sde_gpu", "ddim", "uni_pc", "lcm"];
         const SCHEDULERS = ["normal", "karras", "exponential", "sgm_uniform", "simple", "ddim_uniform", "beta"];
-        const WORKFLOW_FALLBACK = {
-            "3": { "inputs": { "seed": 0, "steps": 20, "cfg": 8, "sampler_name": "euler", "scheduler": "normal", "denoise": 1, "model": ["4", 0], "positive": ["6", 0], "negative": ["7", 0], "latent_image": ["5", 0] }, "class_type": "KSampler" },
-            "4": { "inputs": { "ckpt_name": "v1-5-pruned-emaonly.ckpt" }, "class_type": "CheckpointLoaderSimple" },
-            "5": { "inputs": { "width": 512, "height": 512, "batch_size": 1 }, "class_type": "EmptyLatentImage" },
-            "6": { "inputs": { "text": "", "clip": ["4", 1] }, "class_type": "CLIPTextEncode" },
-            "7": { "inputs": { "text": "", "clip": ["4", 1] }, "class_type": "CLIPTextEncode" },
-            "8": { "inputs": { "samples": ["3", 0], "vae": ["4", 2] }, "class_type": "VAEDecode" },
-            "9": { "inputs": { "filename_prefix": "Mobile_Gen", "images": ["8", 0] }, "class_type": "SaveImage" }
-        };
+        const WORKFLOW_FALLBACK = {"3":{"inputs":{"seed":0,"steps":20,"cfg":8,"sampler_name":"euler","scheduler":"normal","denoise":1,"model":["4",0],"positive":["6",0],"negative":["7",0],"latent_image":["5",0]},"class_type":"KSampler"},"4":{"inputs":{"ckpt_name":"v1-5-pruned-emaonly.ckpt"},"class_type":"CheckpointLoaderSimple"},"5":{"inputs":{"width":512,"height":512,"batch_size":1},"class_type":"EmptyLatentImage"},"6":{"inputs":{"text":"","clip":["4",1]},"class_type":"CLIPTextEncode"},"7":{"inputs":{"text":"","clip":["4",1]},"class_type":"CLIPTextEncode"},"8":{"inputs":{"samples":["3",0],"vae":["4",2]},"class_type":"VAEDecode"},"9":{"inputs":{"filename_prefix":"Mobile_Gen","images":["8",0]},"class_type":"SaveImage"}};
 
         function App() {
+            // States
             const [serverUrl, setServerUrl] = useState(() => localStorage.getItem('comfy_url') || '');
-            const [llmServerUrl, setLlmServerUrl] = useState(() => localStorage.getItem('comfy_llm_url') || ''); // Novo Estado para LLM
+            const [llmServerUrl, setLlmServerUrl] = useState(() => localStorage.getItem('comfy_llm_url') || '');
+            const [systemInstruction, setSystemInstruction] = useState(() => localStorage.getItem('comfy_llm_sys') || "You are a prompt generator. Output comma-separated tags.");
             const [activeTab, setActiveTab] = useState('settings');
             const [isConnected, setIsConnected] = useState(false);
             const [connectionStatus, setConnectionStatus] = useState('idle');
@@ -103,24 +112,31 @@
             const [sampler, setSampler] = useState('euler');
             const [scheduler, setScheduler] = useState('normal');
             
+            // Seeds
             const [imageSeed, setImageSeed] = useState(-1);
+            const [lastGeneratedSeed, setLastGeneratedSeed] = useState(null); // Real seed returned by Comfy
             const [llmSeed, setLlmSeed] = useState(-1);
             
+            // UI
             const [showAdvanced, setShowAdvanced] = useState(false);
             const [showTagEditor, setShowTagEditor] = useState(false);
+            const [showLlmSettings, setShowLlmSettings] = useState(false);
             const [isGenerating, setIsGenerating] = useState(false);
             const [isLlmLoading, setIsLlmLoading] = useState(false);
             
+            // Data
             const [models, setModels] = useState([]);
             const [selectedModel, setSelectedModel] = useState('');
             const [history, setHistory] = useState([]);
             const [lastImage, setLastImage] = useState(null);
             const [presets, setPresets] = useState([]);
             
+            // Workflow
             const [customWorkflow, setCustomWorkflow] = useState(null); 
             const [customWorkflowName, setCustomWorkflowName] = useState('');
             const [isModelLocked, setIsModelLocked] = useState(false);
 
+            // Init
             useEffect(() => {
                 if (serverUrl) checkConnection(serverUrl, true);
                 try {
@@ -131,21 +147,16 @@
                 } catch(e) {}
             }, []);
 
-            const handleUrlChange = (e) => {
-                setServerUrl(e.target.value);
-                localStorage.setItem('comfy_url', e.target.value);
-            };
-
-            const handleLlmUrlChange = (e) => {
-                setLlmServerUrl(e.target.value);
-                localStorage.setItem('comfy_llm_url', e.target.value);
-            };
+            // Handlers
+            const handleUrlChange = (e) => { setServerUrl(e.target.value); localStorage.setItem('comfy_url', e.target.value); };
+            const handleLlmUrlChange = (e) => { setLlmServerUrl(e.target.value); localStorage.setItem('comfy_llm_url', e.target.value); };
+            const handleSysInstChange = (e) => { setSystemInstruction(e.target.value); localStorage.setItem('comfy_llm_sys', e.target.value); };
 
             const handlePaste = async (setter, storageKey) => {
                 try {
                     const text = await navigator.clipboard.readText();
                     if (text) { setter(text); localStorage.setItem(storageKey, text); }
-                } catch (err) { alert("Use o colar do teclado (Permissão negada)"); }
+                } catch (err) { alert("Use o colar do teclado"); }
             };
 
             const downloadImage = async (url, name) => {
@@ -158,18 +169,15 @@
                 } catch(e) { window.open(url, '_blank'); }
             };
 
-            // --- LLM GENERATION (COM SUPORTE A NGROK/HTTPS) ---
+            // --- LLM Logic ---
             const generateFromLLM = async () => {
                 if (!positivePrompt) return alert("Digite uma ideia básica primeiro!");
                 setIsLlmLoading(true);
                 try {
                     let targetUrl;
-                    
-                    // Se o usuário digitou uma URL específica (ex: Ngrok), usa ela
                     if (llmServerUrl) {
                         targetUrl = llmServerUrl.trim().replace(/\/$/, '') + '/v1/chat/completions';
                     } else {
-                        // Fallback: Tenta adivinhar (Só funciona se for HTTP -> HTTP)
                         const ipMatch = serverUrl.match(/:\/\/(.[^/]+)/);
                         if (!ipMatch) throw new Error("Configure a URL da LLM na aba Config.");
                         const cleanIp = ipMatch[1].split(':')[0]; 
@@ -178,11 +186,12 @@
 
                     const payload = {
                         messages: [
-                            { role: "system", content: "You are a prompt generator. Output raw prompt tags separated by commas. Focus on visual description." },
-                            { role: "user", content: `Create detailed prompt for: ${positivePrompt}` }
+                            { role: "system", content: systemInstruction },
+                            { role: "user", content: positivePrompt }
                         ],
                         temperature: 0.7,
-                        max_tokens: 300
+                        max_tokens: 400,
+                        seed: llmSeed !== -1 ? llmSeed : undefined
                     };
 
                     const res = await fetch(targetUrl, {
@@ -197,12 +206,21 @@
                         setShowTagEditor(true);
                     }
                 } catch (e) {
-                    alert(`Erro LLM: ${e.message}\n\nDica: Se você usa o App via HTTPS (GitHub), o LM Studio TAMBÉM precisa ser HTTPS (Use ngrok http 1234 e cole o link na aba Config).`);
+                    alert(`Erro LLM: ${e.message}`);
                 } finally {
                     setIsLlmLoading(false);
                 }
             };
 
+            // --- Unload LLM ---
+            const unloadLlm = async () => {
+                // Tenta liberar VRAM enviando modelo vazio ou comando de unload (depende do servidor, mas ajuda)
+                // A maioria dos servidores OpenAI-compatible não tem endpoint oficial de unload, 
+                // mas carregar um modelo pequeno ou timeout ajuda.
+                alert("Para descarregar o modelo, configure o 'Model Auto-Release' no LM Studio para um tempo curto (ex: 60s) ou clique em Eject no PC.");
+            };
+
+            // --- Comfy API ---
             const checkConnection = async (url, silent = false) => {
                 if (!url) return;
                 if (!silent) setConnectionStatus('connecting');
@@ -237,26 +255,19 @@
                 } catch(e) {}
             };
 
-            // --- INJEÇÃO INTELIGENTE (V12) ---
+            // --- Injection ---
             const injectTextIntoWorkflow = (wf, text, type) => {
                 const kSamplerId = Object.keys(wf).find(k => wf[k].class_type.toLowerCase().includes("ksampler"));
                 if (!kSamplerId) return;
-
                 const kInputs = wf[kSamplerId].inputs;
                 const linkKey = type === 'positive' ? 'positive' : 'negative';
-                
                 if (Array.isArray(kInputs[linkKey])) {
                     const targetId = kInputs[linkKey][0];
                     if (wf[targetId] && wf[targetId].inputs) {
-                        console.log(`Injecting ${type} into node ${targetId}`);
                         if (wf[targetId].inputs.text !== undefined) wf[targetId].inputs.text = text;
                         if (wf[targetId].inputs.text_g !== undefined) wf[targetId].inputs.text_g = text;
                         if (wf[targetId].inputs.text_l !== undefined) wf[targetId].inputs.text_l = text;
-                        
-                        // Break links
-                        ['text', 'text_g', 'text_l'].forEach(k => {
-                            if (Array.isArray(wf[targetId].inputs[k])) wf[targetId].inputs[k] = text;
-                        });
+                        ['text', 'text_g', 'text_l'].forEach(k => { if (Array.isArray(wf[targetId].inputs[k])) wf[targetId].inputs[k] = text; });
                     }
                 }
             };
@@ -283,7 +294,7 @@
                         if(inp.scheduler!==undefined) inp.scheduler = scheduler;
                     }
                     if (!isModelLocked && type === "checkpointloadersimple" && selectedModel) inp.ckpt_name = selectedModel;
-                    if (["emptylatentimage","emptysd3latentimage"].includes(type)) { inp.width = imageSize.w; inp.height = imageSize.h; }
+                    if (["emptylatentimage","emptysd3latentimage","emptyfluxlatentimage"].includes(type)) { inp.width = imageSize.w; inp.height = imageSize.h; }
                 });
 
                 if (positivePrompt) injectTextIntoWorkflow(wf, positivePrompt, 'positive');
@@ -311,6 +322,8 @@
                                     const img = out[k].images[0];
                                     const url = `${serverUrl}/view?filename=${img.filename}&subfolder=${img.subfolder}&type=${img.type}`;
                                     const item = { url, imageSeed: finalImgSeed, prompt: positivePrompt, steps };
+                                    
+                                    setLastGeneratedSeed(finalImgSeed); // Salva a seed real usada
                                     setLastImage(item);
                                     setHistory(prev => [item, ...prev]);
                                     localStorage.setItem('comfy_history', JSON.stringify([item, ...history].slice(0,20)));
@@ -340,7 +353,7 @@
                         }
                         const complex = ["UNETLoader","DualCLIPLoader","Load Diffusion Model"].some(t=>Object.values(j).some(n=>n.class_type===t));
                         setIsModelLocked(complex);
-                        alert("Workflow Carregado v12!");
+                        alert("Workflow Carregado v14!");
                         setActiveTab('generate');
                     } catch(err) { alert("JSON Inválido"); }
                 };
@@ -366,28 +379,6 @@
                 setActiveTab('generate');
             };
 
-            const TagEditor = () => {
-                const tags = positivePrompt.split(',').map(t => t.trim()).filter(t => t);
-                const updateTags = (newTags) => setPositivePrompt(newTags.join(', '));
-                return (
-                    <div className="fixed inset-0 bg-black/95 z-50 p-4 flex flex-col fade-in">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-bold text-white flex gap-2"><Icons.List size={20}/> Editor de Tags</h3>
-                            <button onClick={() => setShowTagEditor(false)}><Icons.X size={24} className="text-neutral-400"/></button>
-                        </div>
-                        <div className="flex-1 overflow-y-auto space-y-2">
-                            {tags.map((tag, i) => (
-                                <div key={i} className="flex gap-2 items-center bg-neutral-900 p-3 rounded-xl border border-neutral-800">
-                                    <input className="flex-1 bg-transparent text-sm outline-none text-emerald-300 font-mono" value={tag} onChange={(e) => { const n = [...tags]; n[i] = e.target.value; updateTags(n); }} />
-                                    <button onClick={() => { const n = tags.filter((_, idx) => idx !== i); updateTags(n); }} className="text-red-500 p-1"><Icons.Trash2 size={16}/></button>
-                                </div>
-                            ))}
-                        </div>
-                        <button onClick={() => setShowTagEditor(false)} className="mt-4 w-full bg-emerald-600 py-3 rounded-xl font-bold text-white">Confirmar</button>
-                    </div>
-                );
-            };
-
             const NavItem = ({id, icon:Icon, label}) => (
                 <button onClick={()=>setActiveTab(id)} className={`flex flex-col items-center justify-center w-16 h-14 ${activeTab===id?'text-emerald-400':'text-neutral-500'} active:scale-95 transition-all`}>
                     <Icon size={24} strokeWidth={activeTab===id?2.5:2} />
@@ -395,9 +386,12 @@
                 </button>
             );
 
+            // Tags Update Helper
+            const onTagsUpdate = (newTags) => setPositivePrompt(newTags.join(', '));
+
             return (
                 <div className="min-h-screen pb-24 font-sans">
-                    {showTagEditor && <TagEditor />}
+                    {showTagEditor && <TagEditor tags={positivePrompt.split(',').map(t => t.trim()).filter(t => t)} onClose={()=>setShowTagEditor(false)} onUpdate={onTagsUpdate} />}
                     
                     {/* Header */}
                     <div onClick={()=>setActiveTab('settings')} className={`p-3 px-4 flex justify-between items-center ${isConnected?'bg-emerald-900/30 border-b border-emerald-800':'bg-red-900/30 border-b border-red-800'} transition-colors`}>
@@ -431,12 +425,20 @@
 
                             <div className="space-y-3">
                                 <div className="relative">
-                                    <textarea value={positivePrompt} onChange={e=>setPositivePrompt(e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-4 text-sm focus:border-emerald-500/50 outline-none min-h-[120px] pr-12" placeholder="Ideia (Ex: Anime girl blue hair...)" />
+                                    <textarea value={positivePrompt} onChange={e=>setPositivePrompt(e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-4 text-sm focus:border-emerald-500/50 outline-none min-h-[120px] pr-12" placeholder="Prompt Positivo" />
                                     <div className="absolute right-2 top-2 flex flex-col gap-2">
                                         <button onClick={generateFromLLM} disabled={isLlmLoading} className="bg-purple-600/20 text-purple-400 p-2 rounded-lg border border-purple-500/30 hover:bg-purple-600 hover:text-white transition-colors">{isLlmLoading ? <Icons.RefreshCw className="animate-spin" size={16}/> : <Icons.Brain size={16}/>}</button>
+                                        <button onClick={()=>setShowLlmSettings(!showLlmSettings)} className="bg-neutral-800 text-neutral-400 p-2 rounded-lg border border-neutral-700 hover:text-white transition-colors"><Icons.Terminal size={16}/></button>
                                         <button onClick={()=>setShowTagEditor(true)} className="bg-neutral-800 text-neutral-400 p-2 rounded-lg border border-neutral-700 hover:text-white transition-colors"><Icons.List size={16}/></button>
                                     </div>
                                 </div>
+                                {showLlmSettings && (
+                                    <div className="bg-neutral-900 p-3 rounded-xl border border-purple-500/30 animate-in fade-in">
+                                        <label className="text-[10px] uppercase font-bold text-purple-400 mb-1 block">Instruções do Sistema (Role: System)</label>
+                                        <textarea value={systemInstruction} onChange={handleSysInstChange} className="w-full bg-neutral-950 border border-neutral-700 rounded-lg p-2 text-xs text-neutral-300 h-20 outline-none" placeholder="Ex: You are an artist..." />
+                                        <button onClick={unloadLlm} className="mt-2 w-full bg-red-900/30 text-red-400 text-xs py-2 rounded hover:bg-red-900/50">Tentar Descarregar Modelo (Eject)</button>
+                                    </div>
+                                )}
                                 <input value={negativePrompt} onChange={e=>setNegativePrompt(e.target.value)} className="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-3 text-xs text-red-200/80 focus:border-red-900/50 outline-none" placeholder="Negativo" />
                             </div>
 
@@ -449,12 +451,20 @@
                                             <div className="space-y-2"><div className="flex justify-between text-[10px] uppercase font-bold text-neutral-500"><span>CFG</span> <span className="text-emerald-400">{cfg}</span></div><input type="range" min="0.5" max="20" step="0.1" value={cfg} onChange={e=>setCfg(Number(e.target.value))} className="w-full h-1.5 bg-neutral-700 rounded-lg"/></div>
                                         </div>
                                         <div className="grid grid-cols-2 gap-3 pt-2 border-t border-neutral-800/50">
-                                            <div><label className="text-[10px] uppercase font-bold text-neutral-500 mb-1.5 flex gap-1"><Icons.Aperture size={10}/> Img Seed</label><div className="flex gap-2"><input type="number" value={imageSeed} onChange={e=>setImageSeed(Number(e.target.value))} className="w-full bg-neutral-800 text-xs rounded-lg p-2.5 outline-none border border-neutral-700"/><button onClick={()=>setImageSeed(-1)} className="bg-neutral-800 px-3 rounded-lg border border-neutral-700 text-neutral-400"><Icons.RefreshCw size={14}/></button></div></div>
+                                            <div>
+                                                <label className="text-[10px] uppercase font-bold text-neutral-500 mb-1.5 flex gap-1"><Icons.Aperture size={10}/> Img Seed</label>
+                                                <div className="flex gap-2">
+                                                    <input type="number" value={imageSeed} onChange={e=>setImageSeed(Number(e.target.value))} className="w-full bg-neutral-800 text-xs rounded-lg p-2.5 outline-none border border-neutral-700"/>
+                                                    <button onClick={()=>setImageSeed(-1)} className={`bg-neutral-800 px-3 rounded-lg border text-neutral-400 ${imageSeed === -1 ? 'border-emerald-500 text-emerald-500' : 'border-neutral-700'}`}><Icons.RefreshCw size={14}/></button>
+                                                    {lastGeneratedSeed && <button onClick={()=>setImageSeed(lastGeneratedSeed)} className="bg-neutral-800 px-3 rounded-lg border border-neutral-700 text-neutral-400 hover:text-emerald-400" title="Reusar Última"><Icons.Repeat size={14}/></button>}
+                                                </div>
+                                                {lastGeneratedSeed && <div className="text-[9px] text-neutral-600 mt-1">Última: {lastGeneratedSeed}</div>}
+                                            </div>
                                             <div><label className="text-[10px] uppercase font-bold text-purple-400 mb-1.5 flex gap-1"><Icons.Brain size={10}/> LLM Seed</label><div className="flex gap-2"><input type="number" value={llmSeed} onChange={e=>setLlmSeed(Number(e.target.value))} className="w-full bg-neutral-800 text-xs rounded-lg p-2.5 outline-none border border-purple-500/30"/><button onClick={()=>setLlmSeed(-1)} className="bg-neutral-800 px-3 rounded-lg border border-purple-500/30 text-purple-400"><Icons.RefreshCw size={14}/></button></div></div>
                                         </div>
                                         <div className="grid grid-cols-2 gap-3">
                                             <div><label className="text-[10px] font-bold text-neutral-500 block mb-1">Sampler</label><select value={sampler} onChange={e=>setSampler(e.target.value)} className="w-full bg-neutral-800 text-xs rounded-lg p-2 border border-neutral-700">{SAMPLERS.map(s=><option key={s} value={s}>{s}</option>)}</select></div>
-                                            <div><label className="text-[10px] font-bold text-neutral-500 block mb-1">Tamanho</label><select value={`${imageSize.w}x${imageSize.h}`} onChange={e=>{const[w,h]=e.target.value.split('x').map(Number);setImageSize({w,h})}} className="w-full bg-neutral-800 text-xs rounded-lg p-2 border border-neutral-700"><option value="512x512">512x512</option><option value="512x768">512x768</option><option value="768x512">768x512</option><option value="1024x1024">SDXL 1024</option><option value="768x1152">Z-Turbo</option></select></div>
+                                            <div><label className="text-[10px] font-bold text-neutral-500 block mb-1">Tamanho</label><select value={`${imageSize.w}x${imageSize.h}`} onChange={e=>{const[w,h]=e.target.value.split('x').map(Number);setImageSize({w,h})}} className="w-full bg-neutral-800 text-xs rounded-lg p-2 border border-neutral-700"><option value="512x512">512x512</option><option value="512x768">512x768</option><option value="768x512">768x512</option><option value="1024x1024">SDXL 1024</option><option value="768x1152">Z-Turbo</option><option value="1920x1080">Full HD</option><option value="2048x2048">2K Square</option><option value="3840x2160">4K</option></select></div>
                                         </div>
                                         <div className={isModelLocked?'opacity-50 pointer-events-none':''}><label className="text-[10px] font-bold text-neutral-500 block mb-1">Modelo {isModelLocked && '(Fixo)'}</label><select value={selectedModel} onChange={e=>setSelectedModel(e.target.value)} className="w-full bg-neutral-800 text-xs rounded-lg p-2 border border-neutral-700 truncate" disabled={isModelLocked}>{models.map(m=><option key={m} value={m}>{m}</option>)}</select></div>
                                     </div>
@@ -487,14 +497,9 @@
                     {activeTab === 'settings' && (
                         <div className="p-5 fade-in">
                             <div className="bg-neutral-900 p-6 rounded-3xl border border-neutral-800 space-y-6">
-                                <div className="flex items-center gap-3 text-neutral-200"><div className="bg-neutral-800 p-2.5 rounded-xl"><Icons.Settings size={24}/></div><div><h2 className="text-lg font-bold">Conexão</h2><p className="text-xs text-neutral-500">v13.0 Ngrok Support</p></div></div>
-                                
-                                {/* COMFY URL */}
-                                <div><label className="text-xs font-bold text-neutral-500 uppercase ml-1 mb-1.5 block">ComfyUI URL (Tailscale/Ngrok)</label><div className="flex gap-2"><input value={serverUrl} onChange={handleUrlChange} className="flex-1 bg-neutral-950 border-2 border-neutral-800 rounded-xl p-4 font-mono text-sm focus:border-emerald-500 outline-none" placeholder="https://..." /><button onClick={()=>handlePaste(setServerUrl, 'comfy_url')} className="bg-neutral-800 px-4 rounded-xl text-neutral-400"><Icons.Clipboard size={20}/></button></div></div>
-                                
-                                {/* LLM URL */}
-                                <div><label className="text-xs font-bold text-purple-500 uppercase ml-1 mb-1.5 block">LLM URL (Opcional - Ngrok 1234)</label><div className="flex gap-2"><input value={llmServerUrl} onChange={handleLlmUrlChange} className="flex-1 bg-neutral-950 border-2 border-neutral-800 rounded-xl p-4 font-mono text-sm focus:border-purple-500 outline-none text-purple-200" placeholder="https://..." /><button onClick={()=>handlePaste(setLlmServerUrl, 'comfy_llm_url')} className="bg-neutral-800 px-4 rounded-xl text-purple-400"><Icons.Clipboard size={20}/></button></div><p className="text-[10px] text-neutral-600 mt-1 ml-1">Deixe em branco para usar o mesmo IP do ComfyUI.</p></div>
-
+                                <div className="flex items-center gap-3 text-neutral-200"><div className="bg-neutral-800 p-2.5 rounded-xl"><Icons.Settings size={24}/></div><div><h2 className="text-lg font-bold">Conexão</h2><p className="text-xs text-neutral-500">v14.0 Ultimate</p></div></div>
+                                <div><label className="text-xs font-bold text-neutral-500 uppercase ml-1 mb-1.5 block">URL</label><div className="flex gap-2"><input value={serverUrl} onChange={handleUrlChange} className="flex-1 bg-neutral-950 border-2 border-neutral-800 rounded-xl p-4 font-mono text-sm focus:border-emerald-500 outline-none" placeholder="https://seu-pc.ts.net:8443" /><button onClick={handlePaste} className="bg-neutral-800 px-4 rounded-xl text-neutral-400"><Icons.Clipboard size={20}/></button></div></div>
+                                <div><label className="text-xs font-bold text-purple-500 uppercase ml-1 mb-1.5 block">LLM URL (Opcional)</label><div className="flex gap-2"><input value={llmServerUrl} onChange={handleLlmUrlChange} className="flex-1 bg-neutral-950 border-2 border-neutral-800 rounded-xl p-4 font-mono text-sm focus:border-purple-500 outline-none text-purple-200" placeholder="https://..." /><button onClick={()=>handlePaste(setLlmServerUrl, 'comfy_llm_url')} className="bg-neutral-800 px-4 rounded-xl text-purple-400"><Icons.Clipboard size={20}/></button></div></div>
                                 <button onClick={()=>checkConnection(serverUrl)} className="w-full py-4 rounded-xl font-bold bg-neutral-100 text-black flex justify-center items-center gap-2 active:scale-95">{isConnected?<Icons.CheckCircle size={20}/>:<Icons.RefreshCw size={20}/>} {isConnected?'Reconectar':'Conectar'}</button>
                             </div>
                         </div>
