@@ -3,9 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ComfyUI Studio V12</title>
+    <title>ComfyUI Studio V13</title>
     <meta name="theme-color" content="#0a0a0a">
     
+    <!-- PWA Manifest -->
+    <script>
+        const manifest = {
+            "name": "ComfyUI Studio",
+            "short_name": "ComfyUI",
+            "start_url": ".",
+            "display": "standalone",
+            "background_color": "#0a0a0a",
+            "theme_color": "#0a0a0a",
+            "icons": [{
+                "src": "https://cdnjs.cloudflare.com/ajax/libs/octicons/8.5.0/svg/zap.svg",
+                "sizes": "192x192",
+                "type": "image/svg+xml"
+            }]
+        };
+        const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+        const link = document.createElement('link');
+        link.rel = 'manifest';
+        link.href = URL.createObjectURL(blob);
+        document.head.appendChild(link);
+    </script>
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -67,6 +89,7 @@
 
         function App() {
             const [serverUrl, setServerUrl] = useState(() => localStorage.getItem('comfy_url') || '');
+            const [llmServerUrl, setLlmServerUrl] = useState(() => localStorage.getItem('comfy_llm_url') || ''); // Novo Estado para LLM
             const [activeTab, setActiveTab] = useState('settings');
             const [isConnected, setIsConnected] = useState(false);
             const [connectionStatus, setConnectionStatus] = useState('idle');
@@ -113,10 +136,15 @@
                 localStorage.setItem('comfy_url', e.target.value);
             };
 
-            const handlePaste = async () => {
+            const handleLlmUrlChange = (e) => {
+                setLlmServerUrl(e.target.value);
+                localStorage.setItem('comfy_llm_url', e.target.value);
+            };
+
+            const handlePaste = async (setter, storageKey) => {
                 try {
                     const text = await navigator.clipboard.readText();
-                    if (text) { setServerUrl(text); localStorage.setItem('comfy_url', text); }
+                    if (text) { setter(text); localStorage.setItem(storageKey, text); }
                 } catch (err) { alert("Use o colar do teclado (Permissão negada)"); }
             };
 
@@ -130,15 +158,23 @@
                 } catch(e) { window.open(url, '_blank'); }
             };
 
-            // --- LLM GENERATION ---
+            // --- LLM GENERATION (COM SUPORTE A NGROK/HTTPS) ---
             const generateFromLLM = async () => {
                 if (!positivePrompt) return alert("Digite uma ideia básica primeiro!");
                 setIsLlmLoading(true);
                 try {
-                    const ipMatch = serverUrl.match(/:\/\/(.[^/]+)/);
-                    if (!ipMatch) throw new Error("IP inválido");
-                    const cleanIp = ipMatch[1].split(':')[0]; 
-                    const llmUrl = `http://${cleanIp}:1234/v1/chat/completions`;
+                    let targetUrl;
+                    
+                    // Se o usuário digitou uma URL específica (ex: Ngrok), usa ela
+                    if (llmServerUrl) {
+                        targetUrl = llmServerUrl.trim().replace(/\/$/, '') + '/v1/chat/completions';
+                    } else {
+                        // Fallback: Tenta adivinhar (Só funciona se for HTTP -> HTTP)
+                        const ipMatch = serverUrl.match(/:\/\/(.[^/]+)/);
+                        if (!ipMatch) throw new Error("Configure a URL da LLM na aba Config.");
+                        const cleanIp = ipMatch[1].split(':')[0]; 
+                        targetUrl = `http://${cleanIp}:1234/v1/chat/completions`;
+                    }
 
                     const payload = {
                         messages: [
@@ -149,7 +185,7 @@
                         max_tokens: 300
                     };
 
-                    const res = await fetch(llmUrl, {
+                    const res = await fetch(targetUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
@@ -161,7 +197,7 @@
                         setShowTagEditor(true);
                     }
                 } catch (e) {
-                    alert("Erro LLM: " + e.message + "\nCertifique-se que o LM Studio está rodando (Porta 1234) e CORS ativado.");
+                    alert(`Erro LLM: ${e.message}\n\nDica: Se você usa o App via HTTPS (GitHub), o LM Studio TAMBÉM precisa ser HTTPS (Use ngrok http 1234 e cole o link na aba Config).`);
                 } finally {
                     setIsLlmLoading(false);
                 }
@@ -414,6 +450,7 @@
                                         </div>
                                         <div className="grid grid-cols-2 gap-3 pt-2 border-t border-neutral-800/50">
                                             <div><label className="text-[10px] uppercase font-bold text-neutral-500 mb-1.5 flex gap-1"><Icons.Aperture size={10}/> Img Seed</label><div className="flex gap-2"><input type="number" value={imageSeed} onChange={e=>setImageSeed(Number(e.target.value))} className="w-full bg-neutral-800 text-xs rounded-lg p-2.5 outline-none border border-neutral-700"/><button onClick={()=>setImageSeed(-1)} className="bg-neutral-800 px-3 rounded-lg border border-neutral-700 text-neutral-400"><Icons.RefreshCw size={14}/></button></div></div>
+                                            <div><label className="text-[10px] uppercase font-bold text-purple-400 mb-1.5 flex gap-1"><Icons.Brain size={10}/> LLM Seed</label><div className="flex gap-2"><input type="number" value={llmSeed} onChange={e=>setLlmSeed(Number(e.target.value))} className="w-full bg-neutral-800 text-xs rounded-lg p-2.5 outline-none border border-purple-500/30"/><button onClick={()=>setLlmSeed(-1)} className="bg-neutral-800 px-3 rounded-lg border border-purple-500/30 text-purple-400"><Icons.RefreshCw size={14}/></button></div></div>
                                         </div>
                                         <div className="grid grid-cols-2 gap-3">
                                             <div><label className="text-[10px] font-bold text-neutral-500 block mb-1">Sampler</label><select value={sampler} onChange={e=>setSampler(e.target.value)} className="w-full bg-neutral-800 text-xs rounded-lg p-2 border border-neutral-700">{SAMPLERS.map(s=><option key={s} value={s}>{s}</option>)}</select></div>
@@ -450,8 +487,14 @@
                     {activeTab === 'settings' && (
                         <div className="p-5 fade-in">
                             <div className="bg-neutral-900 p-6 rounded-3xl border border-neutral-800 space-y-6">
-                                <div className="flex items-center gap-3 text-neutral-200"><div className="bg-neutral-800 p-2.5 rounded-xl"><Icons.Settings size={24}/></div><div><h2 className="text-lg font-bold">Conexão</h2><p className="text-xs text-neutral-500">v12.0 LLM Direct</p></div></div>
-                                <div><label className="text-xs font-bold text-neutral-500 uppercase ml-1 mb-1.5 block">URL</label><div className="flex gap-2"><input value={serverUrl} onChange={handleUrlChange} className="flex-1 bg-neutral-950 border-2 border-neutral-800 rounded-xl p-4 font-mono text-sm focus:border-emerald-500 outline-none" placeholder="https://seu-pc.ts.net:8443" /><button onClick={handlePaste} className="bg-neutral-800 px-4 rounded-xl text-neutral-400"><Icons.Clipboard size={20}/></button></div></div>
+                                <div className="flex items-center gap-3 text-neutral-200"><div className="bg-neutral-800 p-2.5 rounded-xl"><Icons.Settings size={24}/></div><div><h2 className="text-lg font-bold">Conexão</h2><p className="text-xs text-neutral-500">v13.0 Ngrok Support</p></div></div>
+                                
+                                {/* COMFY URL */}
+                                <div><label className="text-xs font-bold text-neutral-500 uppercase ml-1 mb-1.5 block">ComfyUI URL (Tailscale/Ngrok)</label><div className="flex gap-2"><input value={serverUrl} onChange={handleUrlChange} className="flex-1 bg-neutral-950 border-2 border-neutral-800 rounded-xl p-4 font-mono text-sm focus:border-emerald-500 outline-none" placeholder="https://..." /><button onClick={()=>handlePaste(setServerUrl, 'comfy_url')} className="bg-neutral-800 px-4 rounded-xl text-neutral-400"><Icons.Clipboard size={20}/></button></div></div>
+                                
+                                {/* LLM URL */}
+                                <div><label className="text-xs font-bold text-purple-500 uppercase ml-1 mb-1.5 block">LLM URL (Opcional - Ngrok 1234)</label><div className="flex gap-2"><input value={llmServerUrl} onChange={handleLlmUrlChange} className="flex-1 bg-neutral-950 border-2 border-neutral-800 rounded-xl p-4 font-mono text-sm focus:border-purple-500 outline-none text-purple-200" placeholder="https://..." /><button onClick={()=>handlePaste(setLlmServerUrl, 'comfy_llm_url')} className="bg-neutral-800 px-4 rounded-xl text-purple-400"><Icons.Clipboard size={20}/></button></div><p className="text-[10px] text-neutral-600 mt-1 ml-1">Deixe em branco para usar o mesmo IP do ComfyUI.</p></div>
+
                                 <button onClick={()=>checkConnection(serverUrl)} className="w-full py-4 rounded-xl font-bold bg-neutral-100 text-black flex justify-center items-center gap-2 active:scale-95">{isConnected?<Icons.CheckCircle size={20}/>:<Icons.RefreshCw size={20}/>} {isConnected?'Reconectar':'Conectar'}</button>
                             </div>
                         </div>
